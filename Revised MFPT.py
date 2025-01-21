@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 from stochastic.processes.noise import (ColoredNoise)
 
 # Jody's Parameters
@@ -47,7 +48,7 @@ def get_passage(realization):
     except StopIteration:
         return None
 
-def create_MFPT_plot(beta, noisy_variable, scaling_factor, repetitions):
+def create_mfpt_plot(beta, noisy_variable, scaling_factor, repetitions, average_passages):
     realizations = [create_realization(beta, noisy_variable, scaling_factor) for _ in range(repetitions)]
     fig, ax = plt.subplots(1, 1, figsize=(8, 4))
 
@@ -56,6 +57,8 @@ def create_MFPT_plot(beta, noisy_variable, scaling_factor, repetitions):
     error_count = sum([1 for p in passages if p is None])
     print(f"error count: {error_count}")
     average_passage = sum([p for p in passages if p is not None]) / (repetitions - error_count)
+
+    average_passages.append(average_passage)
 
     averages_list = [
         sum([realization[i] for realization in realizations]) / repetitions
@@ -81,11 +84,17 @@ def create_MFPT_plot(beta, noisy_variable, scaling_factor, repetitions):
 
 
 def main():
-    repetitions = 1000
+    repetitions = 10
     noisy_variable = 'K'
     scaling_factor = 5.4
+    average_passages = []
     for beta in [-2, -1, 0, 1, 2]:
-        create_MFPT_plot(beta, noisy_variable, scaling_factor, repetitions)
+        create_mfpt_plot(beta, noisy_variable, scaling_factor, repetitions, average_passages)
+
+    table = pd.DataFrame({'mean first passage': average_passages,
+                         'beta': [-2, -1, 0, 1, 2]})
+    print(table)
+    table.to_csv(noisy_variable + '_' + str(scaling_factor) + '.csv', index=False)
 
 if __name__ == "__main__":
     main()
