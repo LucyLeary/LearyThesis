@@ -48,7 +48,7 @@ def get_passage(realization):
     except StopIteration:
         return None
 
-def create_mfpt_plot(beta, noisy_variable, scaling_factor, repetitions, average_passages):
+def create_mfpt_plot(beta, noisy_variable, scaling_factor, repetitions, average_passages, errors):
     realizations = [create_realization(beta, noisy_variable, scaling_factor) for _ in range(repetitions)]
     fig, ax = plt.subplots(1, 1, figsize=(8, 4))
 
@@ -81,18 +81,24 @@ def create_mfpt_plot(beta, noisy_variable, scaling_factor, repetitions, average_
             scaling_factor) + '.png', bbox_inches='tight')
     plt.close()
     print(average_passage)
+    errors.append(error_count)
 
 
 def main():
-    repetitions = 10
+    # Customizations
+    repetitions = 10000
     noisy_variable = 'K'
     scaling_factor = 5.4
+    betas = [-2, -1, 0, 1, 2]
+
+    # Create plots and a table comparing MFPT and beta
     average_passages = []
-    for beta in [-2, -1, 0, 1, 2]:
-        create_mfpt_plot(beta, noisy_variable, scaling_factor, repetitions, average_passages)
+    errors = []
+    for beta in betas:
+        create_mfpt_plot(beta, noisy_variable, scaling_factor, repetitions, average_passages, errors)
 
     table = pd.DataFrame({'mean first passage': average_passages,
-                         'beta': [-2, -1, 0, 1, 2]})
+                         'beta': betas, 'error count': errors})
     print(table)
     table.to_csv(noisy_variable + '_' + str(scaling_factor) + '.csv', index=False)
 
