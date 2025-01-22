@@ -16,6 +16,7 @@ T = 4000.  # Total time.
 n = int(T / dt)  # Number of time steps.
 t = np.linspace(0., T, n)  # Vector of times.
 
+
 # Creates single realization of stochastic model
 def create_realization(beta, noisy_variable, scaling_factor):
     realization = np.zeros(n)
@@ -42,11 +43,13 @@ def create_realization(beta, noisy_variable, scaling_factor):
             realization[i + 1] = realization[i] + dt * (r * realization[i] * (1 - realization[i] / K) - (a * realization[i] ** (q + 100 * s[i])) / (realization[i] ** (q + scaling_factor * s[i]) + h ** (q + 100 * s[i])))
     return realization
 
+
 def get_passage(realization):
     try:
         return next(idx for idx, elem in enumerate(realization) if elem >= 0.9798)
     except StopIteration:
         return None
+
 
 def create_mfpt_plot(beta, noisy_variable, scaling_factor, repetitions, average_passages, errors):
     realizations = [create_realization(beta, noisy_variable, scaling_factor) for _ in range(repetitions)]
@@ -84,9 +87,16 @@ def create_mfpt_plot(beta, noisy_variable, scaling_factor, repetitions, average_
     errors.append(error_count)
 
 
+def print_variance(beta):
+    cn = ColoredNoise(beta, T)
+    s = cn.sample(n)
+    print("Variance with beta = " + str(beta))
+    print(np.var(s))  # calculating variance
+
+
 def main():
     # Customizations
-    repetitions = 10000
+    repetitions = 100
     noisy_variable = 'K'
     scaling_factor = 5.4
     betas = [-2, -1, 0, 1, 2]
