@@ -51,9 +51,12 @@ def get_passage(realization):
         return None
 
 
-def create_mfpt_plot(beta, noisy_variable, scaling_factor, repetitions, average_passages, errors):
+def create_mfpt_plot(beta, noisy_variable, scaling_factor, repetitions, average_passages, errors, fig, position):
+
+    axis1 = fig.add_subplot(position)
+
     realizations = [create_realization(beta, noisy_variable, scaling_factor) for _ in range(repetitions)]
-    fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+    # fig, ax = plt.subplots(1, 1, figsize=(8, 4))
 
     passages = [get_passage(realization) for realization in realizations]
 
@@ -69,22 +72,17 @@ def create_mfpt_plot(beta, noisy_variable, scaling_factor, repetitions, average_
     ]
 
     for realization in realizations:
-        ax.plot(t, realization, c="gray", lw=0.5)
+        axis1.plot(t, realization, c="gray", lw=0.5)
 
-    ax.plot(t, averages_list, color="black", lw=1)
+    axis1.plot(t, averages_list, color="black", lw=1)
     det = plt.axvline(x=1585, color='red', label="deterministic MFPT")
     stoch = plt.axvline(x=average_passage, color='blue', label="stochastic MFPT")
-    plt.legend([det, stoch], ["deterministic MFPT", "stochastic MFPT"])
-    ax.set_title('Beta = ' + str(beta) + " with " + str(
-        repetitions) + ' realizations and noisy parameter ' + noisy_variable + '_scaled_by_' + str(scaling_factor))
-    ax.set_xlabel('t')
-    ax.set_ylabel('x')
-    plt.savefig(
-        'MFPT_beta_' + str(beta) + '_repetitions_' + str(repetitions) + '_parameter_' + noisy_variable + '_scaled_by_' + str(
-            scaling_factor) + '.png', bbox_inches='tight')
-    plt.close()
+    axis1.set_title('Beta = ' + str(beta))
+    axis1.set_xlabel('t')
+    axis1.set_ylabel('x')
     print(average_passage)
     errors.append(error_count)
+    return [det, stoch]
 
 
 def print_variance(beta):
@@ -93,10 +91,20 @@ def print_variance(beta):
     print("Variance with beta = " + str(beta))
     print(np.var(s))  # calculating variance
 
+def save_plots_to_one_file(betas, noisy_variable, scaling_factor, repetitions, average_passages, errors):
+    fig = plt.figure(figsize=(10.0, 5.0))
+    position = 230
+    for beta in betas:
+        position += 1
+        legend_position = create_mfpt_plot(beta, noisy_variable, scaling_factor, repetitions, average_passages, errors, fig, position)
+    fig.legend(legend_position, ["deterministic MFPT", "stochastic MFPT"], bbox_to_anchor=(.92, .45))
+    fig.tight_layout()
+    fig.savefig('repetitions_' + str(repetitions) + '_parameter_' + noisy_variable + '_scaled_by_' + str(
+            scaling_factor) + '.png', bbox_inches='tight')
 
 def main():
     # Customizations
-    repetitions = 100
+    repetitions = 10000
     noisy_variable = 'K'
     scaling_factor = 5.4
     betas = [-2, -1, 0, 1, 2]
@@ -104,8 +112,8 @@ def main():
     # Create plots and a table comparing MFPT and beta
     average_passages = []
     errors = []
-    for beta in betas:
-        create_mfpt_plot(beta, noisy_variable, scaling_factor, repetitions, average_passages, errors)
+
+    save_plots_to_one_file(betas, noisy_variable, scaling_factor, repetitions, average_passages, errors)
 
     table = pd.DataFrame({'mean first passage': average_passages,
                          'beta': betas, 'error count': errors})
